@@ -91,7 +91,6 @@ analyze_phase3 <- function(df, emission_var) {
     )
     )
   
-  
   did_ETS_Article10c <- feols(
     emission_log ~ ETS:phase3_post+ETS:phase3_post:Article10c|
       Firm + Sector^year,
@@ -174,9 +173,9 @@ analyze_phase3 <- function(df, emission_var) {
     group_by(Article10c,ETS) %>%
     summarise(
       n = sum(weights, na.rm = TRUE),
-      n_firms = n_distinct(Firm)
-    ) %>%
-    ungroup()
+      n_firms = n_distinct(Firm),
+      .groups = "drop"
+    )
   ################### Event study
   
   # yearly event‐study, without FE
@@ -278,133 +277,118 @@ names(results) <- sub("^matched_data\\.(.*)\\.RData$", "\\1", all_files)
 
 for (v in names(results)) {
   cat("\n----", v, "----\n")
-  # 
-  # # 1) Plain DiD, phase 3|4
-  # sel_terms <- c("ETS:phase3_post", "ETS:phase4_post")
-  # cat("\ Facility P3 Post3 and Post4 \n")
-  # print(
-  #   results[[v]]$did_plain[
-  #     results[[v]]$did_plain$term %in% sel_terms,
-  #   ]
-  # )
-  # 
-  # # 2) FE + sector×year 3|4
-  # cat("\n Facility FE P3 Post3 and Post4 \n")
-  # print(
-  #   results[[v]]$did_fe_sector[
-  #     results[[v]]$did_fe_sector$term %in% sel_terms,
-  #   ]
-  # )
-  # 
-  # # 3) Parent DiD 3|4
-  # sel_terms_parent <- c("Parent_ETS_dummy:phase3_post", "Parent_ETS_dummy:phase4_post")
-  # cat("\n Firm P3 Post3 and Post4 \n")
-  # print(
-  #   results[[v]]$did_plain_parent[
-  #     results[[v]]$did_plain_parent$term %in% sel_terms_parent,
-  #   ]
-  # )
-  # 
-  # # 4) FE + sector×year, parent 3|4
-  # cat("\n Firm FE P3 Post3 and Post4 \n")
-  # print(
-  #   results[[v]]$did_fe_parent_sector[
-  #     results[[v]]$did_fe_parent_sector$term %in% sel_terms_parent,
-  #   ]
-  # )
-  # 
-  # 5) FE + sector×year, subperiod (2008–2017)
+
+  # 1) Plain DiD, phase 3|4
+  sel_terms <- c("ETS:phase3_post", "ETS:phase4_post")
+  cat("\ Facility P3 Post3 and Post4 \n")
+  print(
+    results[[v]]$did_plain[
+      results[[v]]$did_plain$term %in% sel_terms,
+    ]
+  )
+
+  # 2) FE + sector×year 3|4
+  cat("\n Facility FE P3 Post3 and Post4 \n")
+  print(
+    results[[v]]$did_fe_sector[
+      results[[v]]$did_fe_sector$term %in% sel_terms,
+    ]
+  )
+
+  # 3) Parent DiD 3|4
+  sel_terms_parent <- c("Parent_ETS_dummy:phase3_post", "Parent_ETS_dummy:phase4_post")
+  cat("\n Firm P3 Post3 and Post4 \n")
+  print(
+    results[[v]]$did_plain_parent[
+      results[[v]]$did_plain_parent$term %in% sel_terms_parent,
+    ]
+  )
+
+  # 4) FE + sector×year, parent 3|4
+  cat("\n Firm FE P3 Post3 and Post4 \n")
+  print(
+    results[[v]]$did_fe_parent_sector[
+      results[[v]]$did_fe_parent_sector$term %in% sel_terms_parent,
+    ]
+  )
+
+  #5) FE + sector×year, subperiod (2008–2017)
   cat("\nFE + Sector Trend 2008-2017\n")
   print(
     results[[v]]$did_fe_sector2017[
       results[[v]]$did_fe_sector2017$term %in% c("ETS:phase3_post"),
     ]
   )
-  # cat("\n FE + Sector Trend + Region Trend 2008-2017\n")
-  # print(
-  #   results[[v]]$did_ETS_Region
-  # )
-
+  cat("\n FE + Sector Trend + Region Trend 2008-2017\n")
+  print(
+    results[[v]]$did_ETS_Region
+  )
   cat("\n FE + Article10c\n")
   print(
     results[[v]]$did_ETS_Article10c
-  )  
-  # #
-  # # # 6) FE + sector×year, balanced subperiod (2008–2017)
-  # # cat("\nFE + Sector Trend Balanced 2008-2017\n")
-  # # print(
-  # #   results[[v]]$did_fe_sector_balanced2017[
-  # #     results[[v]]$did_fe_sector_balanced2017$term %in% c("ETS:phase3_post"),
-  # #   ]
-  # # )
-  # 
-  # # 7) DiD, phases 3&4
-  # cat("\n Facility P3 Post34 \n")
-  # print(
-  #   results[[v]]$did_plain34[
-  #     results[[v]]$did_plain34$term %in% c("ETS:phase3_4_post"),
-  #   ]
-  # )
-  # 
-  # # 8) Parent DiD, phases 3&4
-  # cat("\n Firm P3 Post34 \n")
-  # print(
-  #   results[[v]]$did_parent34[
-  #     results[[v]]$did_parent34$term %in% c("Parent_ETS_dummy:phase3_4_post"),
-  #   ]
-  # )
-  # 
-  # # 9) FE + sector×year, phases 3&4
-  # cat("\n Facility FE P3 Post34 \n")
-  # print(
-  #   results[[v]]$did_fe_sector34[
-  #     results[[v]]$did_fe_sector34$term %in% c("ETS:phase3_4_post"),
-  #   ]
-  # )
-  # 
-  # # 10) FE + sector×year, parent phases 3&4
-  # cat("\n Firm FE P3 Post34 \n")
-  # print(
-  #   results[[v]]$did_fe_sector_parent34[
-  #     results[[v]]$did_fe_sector_parent34$term %in% c("Parent_ETS_dummy:phase3_4_post"),
-  #   ]
-  # )
-  # 
-  # # 11) FE + sector×year, subperiod (phases 3&4, 2008–2017)
-  # cat("\n Subperiod FE 2008-2017\n")
-  # print(
-  #   results[[v]]$did_342017[
-  #     results[[v]]$did_342017$term %in% c("ETS:phase3_post"),
-  #   ]
-  # )
-  # 
+  )
+   # 6) FE + sector×year, balanced subperiod (2008–2017)
+  cat("\nFE + Sector Trend Balanced 2008-2017\n")
+  print(
+    results[[v]]$did_fe_sector_balanced2017[
+      results[[v]]$did_fe_sector_balanced2017$term %in% c("ETS:phase3_post"),
+    ]
+  )
+
+  # 7) DiD, phases 3&4
+  cat("\n Facility P3 Post34 \n")
+  print(
+    results[[v]]$did_plain34[
+      results[[v]]$did_plain34$term %in% c("ETS:phase3_4_post"),
+    ]
+  )
+
+  # 8) Parent DiD, phases 3&4
+  cat("\n Firm P3 Post34 \n")
+  print(
+    results[[v]]$did_parent34[
+      results[[v]]$did_parent34$term %in% c("Parent_ETS_dummy:phase3_4_post"),
+    ]
+  )
+
+  # 9) FE + sector×year, phases 3&4
+  cat("\n Facility FE P3 Post34 \n")
+  print(
+    results[[v]]$did_fe_sector34[
+      results[[v]]$did_fe_sector34$term %in% c("ETS:phase3_4_post"),
+    ]
+  )
+
+  # 10) FE + sector×year, parent phases 3&4
+  cat("\n Firm FE P3 Post34 \n")
+  print(
+    results[[v]]$did_fe_sector_parent34[
+      results[[v]]$did_fe_sector_parent34$term %in% c("Parent_ETS_dummy:phase3_4_post"),
+    ]
+  )
+
+  # 11) FE + sector×year, subperiod (phases 3&4, 2008–2017)
+  cat("\n Subperiod FE 2008-2017\n")
+  print(
+    results[[v]]$did_342017[
+      results[[v]]$did_342017$term %in% c("ETS:phase3_post"),
+    ]
+  )
+
   cat("\n Subperiod FE P3 Post3 (2008-2017):\n",
       "  Sum weights:   ", round(results[[v]]$sum_df3), "\n",
       "  Unique facilities:  ", results[[v]]$n_firmdf3,   "\n")
-  
+
   print(results[[v]]$summaryArticle10.c)
-  # 
-  # 
-  # # 12) Balanced FE
-  # cat("\n Balanced FE P3 Post3 \n")
-  # print(
-  #   results[[v]]$did_balanced342017[
-  #     results[[v]]$did_balanced342017$term %in% c("ETS:phase3_post"),
-  #   ]
-  # )
-  
-  # 12) Balanced FE
-  # cat("\n Balanced FE P3 Post3 \n")
-  # print(results[[v]]$did_ETS_sector)
-  # 
-  # cat("\n\nSum weights (2008-2023):\n",
-  #     "  Sum weights:   ", results[[v]]$sum_df1, "\n",
-  #     "  Unique facilities:  ", results[[v]]$n_firmdf1,   "\n")
-  # cat("\n Balanced FE:\n",
-  #     "  Sum weights P3 Post3:   ", round(results[[v]]$sum_df4), "\n",
-  #     "  Unique facilities P3 Post3:  ", results[[v]]$n_firmdf4,   "\n")
-  # cat("\n Eventtime \n")
-  # print(results[[v]]$plt_plain)
+
+  cat("\n\nSum weights (2008-2023):\n",
+      "  Sum weights:   ", results[[v]]$sum_df1, "\n",
+      "  Unique facilities:  ", results[[v]]$n_firmdf1,   "\n")
+  cat("\n Balanced FE:\n",
+      "  Sum weights P3 Post3:   ", round(results[[v]]$sum_df4), "\n",
+      "  Unique facilities P3 Post3:  ", results[[v]]$n_firmdf4,   "\n")
+  cat("\n Eventtime \n")
+  print(results[[v]]$plt_plain)
 }
 
 #######Update the N2o subsample table
